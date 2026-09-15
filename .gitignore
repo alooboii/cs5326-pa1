@@ -10,8 +10,6 @@ data/
 runs/
 checkpoints/
 submission.zip
-public_tests.txt
-submission_manifest.json
 *.pt
 *.pth
 *.ckpt

@@ -12,7 +12,6 @@ from tests.adapters import (
 )
 
 
-@pytest.mark.level1
 def test_softmax_matches_reference_across_dimensions_and_large_offsets() -> None:
     torch.manual_seed(10)
     x = (torch.randn(2, 3, 5, dtype=torch.float64) * 100).requires_grad_()
@@ -25,7 +24,6 @@ def test_softmax_matches_reference_across_dimensions_and_large_offsets() -> None
     assert x.grad is not None and torch.isfinite(x.grad).all()
 
 
-@pytest.mark.level2
 def test_scaled_attention_supports_leading_dims_masks_and_distinct_value_width() -> None:
     torch.manual_seed(11)
     q = torch.randn(2, 3, 4, 8, dtype=torch.float64, requires_grad=True)
@@ -41,7 +39,6 @@ def test_scaled_attention_supports_leading_dims_masks_and_distinct_value_width()
     assert all(tensor.grad is not None and torch.isfinite(tensor.grad).all() for tensor in (q, k, v))
 
 
-@pytest.mark.level3
 def test_scaled_attention_validates_core_shapes_and_boolean_mask() -> None:
     q = torch.randn(2, 4, 8)
     k = torch.randn(2, 6, 7)
@@ -54,18 +51,6 @@ def test_scaled_attention_validates_core_shapes_and_boolean_mask() -> None:
         run_scaled_dot_product_attention(q, torch.randn(2, 6, 8), v, torch.ones(4, 6))
 
 
-@pytest.mark.level3
-def test_scaled_attention_rejects_an_all_masked_query() -> None:
-    q = torch.randn(2, 3, 4)
-    k = torch.randn(2, 5, 4)
-    v = torch.randn(2, 5, 7)
-    mask = torch.ones(1, 3, 5, dtype=torch.bool)
-    mask[:, 1] = False
-    with pytest.raises(Exception):
-        run_scaled_dot_product_attention(q, k, v, mask)
-
-
-@pytest.mark.level1
 def test_scaled_attention_without_mask_matches_reference() -> None:
     q = torch.randn(4, 6, dtype=torch.float64, requires_grad=True)
     k = torch.randn(7, 6, dtype=torch.float64, requires_grad=True)
@@ -128,11 +113,9 @@ def _explicit_repeat_gqa(
     return output @ weights["out_proj.weight"].T
 
 
-@pytest.mark.parametrize("n_kv_heads", [1, 2, 4])
-@pytest.mark.level2
-def test_gqa_mqa_and_mha_match_independent_explicit_repeat(n_kv_heads: int) -> None:
+def test_gqa_matches_independent_explicit_repeat() -> None:
     torch.manual_seed(12)
-    d_model, n_q_heads, sequence = 16, 4, 6
+    d_model, n_q_heads, n_kv_heads, sequence = 16, 4, 2, 6
     x = torch.randn(2, sequence, d_model)
     positions = torch.tensor([[0, 1, 2, 4, 7, 8], [3, 4, 5, 6, 7, 9]])
     weights = _attention_weights(d_model, n_q_heads, n_kv_heads)
@@ -161,7 +144,6 @@ def test_gqa_mqa_and_mha_match_independent_explicit_repeat(n_kv_heads: int) -> N
 
 
 @torch.no_grad()
-@pytest.mark.level1
 def test_gqa_is_strictly_causal_and_prefix_invariant() -> None:
     d_model, n_q_heads, n_kv_heads = 16, 4, 2
     weights = _attention_weights(d_model, n_q_heads, n_kv_heads)
@@ -182,35 +164,3 @@ def test_gqa_is_strictly_causal_and_prefix_invariant() -> None:
     original = run_grouped_query_self_attention(*arguments, x)
     modified = run_grouped_query_self_attention(*arguments, changed)
     torch.testing.assert_close(original[:, :5], modified[:, :5], rtol=1e-5, atol=1e-5)
-
-
-@pytest.mark.level3
-def test_gqa_validates_head_ratios_and_context_length() -> None:
-    x = torch.randn(1, 4, 18)
-    weights = _attention_weights(18, 3, 1)
-    with pytest.raises(Exception):
-        run_grouped_query_self_attention(
-            18,
-            4,
-            1,
-            8,
-            10_000.0,
-            torch.randn(18, 18),
-            torch.randn(4, 18),
-            torch.randn(4, 18),
-            torch.randn(18, 18),
-            x,
-        )
-    with pytest.raises(Exception):
-        run_grouped_query_self_attention(
-            18,
-            3,
-            1,
-            3,
-            10_000.0,
-            weights["q_proj.weight"],
-            weights["k_proj.weight"],
-            weights["v_proj.weight"],
-            weights["out_proj.weight"],
-            x,
-        )

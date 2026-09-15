@@ -1,4 +1,4 @@
-# CS 5236 Programming Assignment 1
+# CS 5326 Programming Assignment 1
 
 ## The Modern Transformer LM
 
@@ -19,22 +19,15 @@ uv sync --frozen
 uv run pytest
 ```
 
+The locked environment supplies PyTorch, NumPy, einops, jaxtyping, tokenizers,
+huggingface-hub, matplotlib, wrapt, and pytest.
+
 Write your implementation inside the supplied `src/` directory. Connect it to
 the tests by completing `tests/adapters.py`; adapters are glue code and must not
 contain the assignment mathematics. Do not edit the public test files.
 
-The tests are organized into three levels:
-
-```bash
-uv run pytest -m level1
-uv run pytest -m level2
-uv run pytest -m level3
-uv run pytest
-```
-
-Level 1 covers canonical behavior, Level 2 covers generality and integration,
-and Level 3 covers numerical and boundary cases. Grading may also use hidden
-tests through the same documented adapter interface.
+Grading may also use hidden tests through the same adapter interface. Hidden
+tests cover only behavior documented in the assignment manual.
 
 ## Download TinyStories
 
@@ -70,14 +63,17 @@ uv run pytest
 
 ## Submission
 
-Complete `REPORT.md`, place its figures under `report_assets/`, place the
-required machine-readable evidence under `logs/`, and export the final model's
-FP16 CPU state dictionary as `final_model.pt`. Then run:
+Complete `REPORT.md`, include at least one figure or visualization under
+`report_assets/`, and export the final model's tensor-only FP16 CPU state
+dictionary as `final_model.pt`. Then run:
 
 ```bash
 bash make_submission.sh
 ```
 
-Upload the resulting `submission.zip` to the LMS. The script records public
-test output and excludes downloaded data, caches, and full training
-checkpoints.
+The script prints the ordinary public-test results and creates
+`submission.zip`, even if some tests fail. Rename the archive to
+`<roll_number_pa1>.zip`, replacing `<roll_number>` with your roll number, and
+upload it to the LMS. The archive contains only `src/`, `tests/adapters.py`,
+`REPORT.md`, `report_assets/`, and `final_model.pt`; downloaded data, caches,
+and full training checkpoints are excluded.

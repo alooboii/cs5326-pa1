@@ -1,211 +1,97 @@
-# CS 5236 PA1 Report: The Modern Transformer LM
+# Training and Inference Report
 
-Complete every section. Keep the requested raw evidence under `logs/` and all
-figures under `report_assets/`. The report, logs, generations, and
-`final_model.pt` must describe the same final model.
+This report should document and analyze the decisions you made while training and
+evaluating your Transformer language model.
 
-## 1. Reproducibility
+The goal is not to follow a prescribed sequence of experiments. Instead, use the
+report to explain your experimental process, the evidence that informed your
+decisions, and what you learned about the behavior of your model.
 
-- Name:
-- Student ID:
-- Git commit:
-- Is the submitted working tree dirty? If so, explain:
-- Exact environment command:
-- Python version:
-- PyTorch version:
-- Hardware and accelerator:
-- Model-initialization seed:
-- Training-generator seed:
-- Validation-generator seed:
-- Final-model SHA-256:
+You may use tables, plots, generated samples, or other quantitative evidence
+wherever they help support your discussion. Figures should be placed under
+`report_assets/`.
 
-List the exact commands needed to reproduce your short experiments, final
-training run, standardized validation, model export, and generation study.
+The final model, training results, and generated samples discussed in this report
+must all correspond to the same final trained model.
 
-## 2. Implementation checks
 
-Paste the complete output of `uv run pytest`. The packaging script also records
-this output in `public_tests.txt`.
+## 1. Training Hyperparameter Exploration
 
-### Fixed-minibatch overfitting
+Describe how you arrived at the training configuration used for your final run.
 
-| Measurement | Value |
-|---|---:|
-| Initial loss | |
-| Final loss | |
-| Optimizer updates | |
+Your discussion should make clear what configurations or training strategies you
+experimented with, why you chose to investigate them, and what you learned from
+the results.
 
-Why is this test useful before a long training run? If the loss did not fall
-sharply, identify the most likely failure point.
+Include enough quantitative evidence to support your conclusions. For example,
+you may compare validation-loss curves, training-loss curves, gradient norms,
+learning-rate schedules, or other quantities that were useful during your
+experiments.
 
-### Checkpoint and resume
+The emphasis of this section should be on your **reasoning and experimental
+process**, rather than simply listing hyperparameter values.
 
-State how you verified that model state, optimizer state, `next_step`, and both
-batch-generator states were restored. Include the uninterrupted and resumed
-next-step losses or parameter comparison.
+<details>
+<summary><b>Your response here:</b></summary>
+</details>
 
-## 3. Controlled hyperparameter tuning
 
-- Short-run optimizer-step cap:
-- Model-initialization seed shared across comparisons:
-- Training-generator seed shared across comparisons:
-- Validation-generator seed shared across comparisons:
-- Validation schedule and batch count:
+## 2. Final Training Run
 
-Use one row per run. In each baseline-versus-variant comparison, change one
-training hyperparameter while holding the remaining conditions fixed.
+Describe the final training run using the configuration you selected.
 
-| Run ID | Steps | One controlled change | Microbatch | Accumulation | Effective batch | Tokens/update | Peak LR | Min LR | Warmup | Betas | Weight decay | Clip | Best val loss | Final val loss | Decision |
-|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---|
-| baseline | | none | | | | | | | | | | | | | |
-| variant-1 | | | | | | | | | | | | | | | |
+Use plots and numerical summaries where they are useful for making your argument.
 
-Answer the following:
+<details>
+<summary><b>Your response here:</b></summary>
+</details>
 
-1. What evidence supports attributing the observed difference to the changed
-   hyperparameter rather than to a different seed, data order, budget, or
-   evaluation procedure?
-2. How did the change affect optimization speed, stability, gradient norms, and
-   validation loss?
-3. Why did you promote or reject the variant?
-4. If effective batch size changed, how did sampled-token exposure change under
-   the fixed optimizer-step cap?
-5. What uncertainty remains when using a short-run ranking to select a
-   10,000-step configuration?
+## 3. Final validation performance
 
-Include an overlaid validation-loss plot for the controlled runs.
+Evaluate the final model on the validation set and report its validation
+cross-entropy and perplexity.
 
-## 4. Final 10,000-step run
+For the standardized evaluation, use a fresh `torch.Generator` seeded with 42
+and evaluate over 100 validation batches of 16 sequences of length 256.
 
-### Exact execution
+Report:
 
-- Initial training command:
-- Checkpoint path:
-- Resume command, if used:
-- Final evaluation command:
-- Model-export command:
+- mean validation cross-entropy in nats/token;
+- perplexity computed as
 
-### Final configuration and token accounting
+$$
+\operatorname{PPL} = \exp(\text{mean validation cross-entropy}).
+$$
 
-| Setting | Value |
-|---|---:|
-| Sequence length | 256 |
-| Microbatch size | |
-| Gradient-accumulation steps | |
-| Effective batch size | |
-| Tokens per optimizer update | |
-| Optimizer updates | 10,000 |
-| Total sampled tokens | |
-| Corpus-equivalents | |
-| Peak learning rate | |
-| Minimum learning rate | |
-| Warmup endpoint | |
-| Cosine endpoint | 9,999 |
-| AdamW betas | |
-| AdamW epsilon | |
-| Weight decay | |
-| Maximum gradient norm | |
+Do not average separately computed per-batch perplexities.
 
-### Curves
+<details>
+<summary><b>Your response here:</b></summary>
+</details>
 
-Embed and briefly interpret:
+## 4. Inference and Decoding Analysis
 
-1. training and validation loss against completed optimizer updates;
-2. learning rate against completed optimizer updates; and
-3. pre-clipping gradient norm against completed optimizer updates.
+Investigate how the behavior of your trained model changes under different
+decoding strategies.
 
-The underlying values must be present in `logs/final_training.csv` with the
-columns `completed_steps`, `train_loss`, `validation_loss`, `learning_rate`, and
-`grad_norm`.
+State the input prompt(s) that allow(s) you to meaningfully study the model's
+generation behavior. Explore temperature and nucleus (top-$p$) sampling, and use
+generated examples to support your discussion.
 
-### Standardized final evaluation
+Include representative generated examples. Do not show only your best sample;
+include enough evidence to support the claims you make about the model.
 
-Evaluate using a fresh `torch.Generator` seeded with 42 over 100 validation
-batches of 16 sequences of length 256.
+<details>
+<summary><b>Your response here:</b></summary>
+</details>
 
-| Metric | Value |
-|---|---:|
-| Mean validation cross-entropy (nats/token) | |
-| Perplexity, `exp(mean validation loss)` | |
+## Submitted Artifacts
 
-Do not average per-batch perplexities. Record the same values and evaluation
-settings in `logs/final_metrics.json`.
-
-### Training interpretation
-
-1. Where did learning progress fastest, and where did diminishing returns begin?
-2. Is there evidence of divergence, stalled learning, instability, or
-   overfitting? Cite specific regions of the curves.
-3. How often did clipping activate, and what does the gradient-norm trace imply?
-4. Did the short-run evidence predict the behavior of the final run? Explain any
-   discrepancy.
-
-## 5. Decoding study
-
-Use one non-empty prompt, one sampling seed, and one maximum completion length
-throughout.
-
-- Prompt text:
-- Prompt token IDs:
-- Sampling seed:
-- Maximum new tokens:
-- EOT token ID:
-
-Record every trial in `logs/generations.json`, including prompt text and IDs,
-output text and IDs, temperature, top-p, seed, and maximum new tokens.
-
-### Temperature comparison
-
-Hold top-p fixed and compare at least three temperatures.
-
-| Temperature | Fixed top-p | Output-record ID | Generated output |
-|---:|---:|---|---|
-| | | | |
-| | | | |
-| | | | |
-
-### Nucleus-sampling comparison
-
-Hold temperature fixed and compare at least three top-p values.
-
-| Fixed temperature | Top-p | Output-record ID | Generated output |
-|---:|---:|---|---|
-| | | | |
-| | | | |
-| | | | |
-
-Answer the following:
-
-1. How did temperature affect coherence, diversity, repetition, and unlikely
-   word choices?
-2. How did top-p affect the effective candidate set, prompt adherence, and
-   degeneration?
-3. Which setting produced the best trade-off for this model, and what evidence
-   supports that choice?
-4. Did the model terminate with EOT? Discuss premature termination or failure to
-   terminate where relevant.
-
-## 6. Failure analysis
-
-Select the weakest generated sample and analyze it closely.
-
-1. What failed: local grammar, global coherence, factual consistency, prompt
-   adherence, repetition, or termination?
-2. Is the failure more plausibly caused by training, model capacity, the
-   256-token context, the TinyStories distribution, or decoding?
-3. What single follow-up experiment would best distinguish those explanations?
-4. What would you change with additional compute?
-
-## 7. Artifact index
-
-Link every submitted artifact:
+Your submission should include the artifacts needed to support the analysis in
+this report:
 
 - `final_model.pt`
-- `logs/final_training.csv`
-- `logs/final_metrics.json`
-- `logs/generations.json`
-- short-run and final training logs
-- each figure under `report_assets/`
+- figures/visualizations used in this report under `report_assets/`
 
-Confirm that `final_model.pt` is the FP16 CPU state dictionary for the model
-used throughout Sections 4--6.
+`final_model.pt` should contain the FP16 CPU state dictionary corresponding to
+the final model analyzed in this report.

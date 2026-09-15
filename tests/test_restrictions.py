@@ -58,7 +58,6 @@ def _resolve(name: str, aliases: dict[str, str]) -> str:
     return f"{resolved}.{remainder}" if separator else resolved
 
 
-@pytest.mark.level2
 def test_no_plainly_forbidden_high_level_implementations() -> None:
     violations: list[str] = []
     source_root = Path.cwd() / "src"
