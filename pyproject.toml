@@ -20,6 +20,7 @@ dev = ["pytest>=8.3,<9"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+pythonpath = ["."]
 
 [tool.uv]
 package = false
